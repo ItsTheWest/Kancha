@@ -1,0 +1,79 @@
+:root {
+  color-scheme: dark;
+  --fondo: #0b0f14;
+  --superficie: #141a22;
+  --borde: #243040;
+  --texto: #e8edf3;
+  --texto-suave: #93a1b3;
+  --ok: #3ecf8e;
+  --error: #ff6b6b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+main {
+  width: min(28rem, 100%);
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.sub {
+  margin: 0 0 1.5rem;
+  color: var(--texto-suave);
+}
+
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.tarjeta h2 {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--texto-suave);
+}
+
+.fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.fila + .fila {
+  border-top: 1px solid var(--borde);
+}
+
+.estado {
+  font-weight: 600;
+}
+
+.estado[data-estado='up'] {
+  color: var(--ok);
+}
+
+.estado[data-estado='down'] {
+  color: var(--error);
+}
