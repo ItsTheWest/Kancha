@@ -1,4 +1,8 @@
 import { Module } from '@nestjs/common';
+import { DatabaseModule } from './database/database.module';
+import { RedisModule } from './redis/redis.module';
 
-@Module({})
+@Module({
+  imports: [DatabaseModule, RedisModule],
+})
 export class AppModule {}
