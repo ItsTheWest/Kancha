@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kancha_dev_password}
       POSTGRES_DB: ${POSTGRES_DB:-kancha}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-55432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +22,7 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_PORT:-56379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -39,7 +39,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgres://kancha:kancha_dev_password@postgres:5432/kancha}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
     ports:
-      - "${BACKEND_PORT:-3001}:3001"
+      - "${BACKEND_PORT:-53001}:3001"
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,7 +58,7 @@ services:
     environment:
       BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://backend:3001}
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      - "${FRONTEND_PORT:-53000}:3000"
     depends_on:
       backend:
         condition: service_healthy

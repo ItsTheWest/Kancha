@@ -29,8 +29,10 @@ cp .env.example .env
 docker compose up --build
 ```
 
-- Frontend: http://localhost:3000
-- Backend: http://localhost:3001/health
+- Frontend: http://localhost:53000
+- Backend: http://localhost:53001/health
+
+Los puertos publicados en el host (53000/53001/55432/56379) son poco comunes a propósito, para no chocar con otros proyectos locales. Se cambian en `.env` — ver [docs/SETUP.md](docs/SETUP.md) para el detalle de credenciales, enlaces y cómo resolver conflictos de puertos.
 
 Las migraciones se aplican solas al iniciar el backend. También se pueden correr a mano:
 
