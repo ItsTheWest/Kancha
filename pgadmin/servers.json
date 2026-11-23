@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Kancha (postgres)",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "kancha",
+      "Username": "kancha",
+      "SSLMode": "prefer"
+    }
+  }
+}

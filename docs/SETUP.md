@@ -89,9 +89,10 @@ redis://localhost:56379
 | Email    | `admin@kancha.dev`             |
 | Password | `kancha_dev_password`          |
 
-Al entrar, registra un nuevo servidor para conectarte a Postgres. Como
-pgAdmin corre en la misma red de Docker, usa el **nombre del servicio**, no
-`localhost`:
+El servidor "Kancha (postgres)" ya viene pre-registrado (ver
+`pgadmin/servers.json`, montado dentro del contenedor). Al abrirlo en el
+árbol "Servers" solo pedirá la contraseña una vez — pgAdmin no la guarda en
+texto plano por seguridad:
 
 | Campo    | Valor                  |
 | -------- | ------------------------ |
@@ -99,6 +100,11 @@ pgAdmin corre en la misma red de Docker, usa el **nombre del servicio**, no
 | Puerto   | `5432`                    |
 | Usuario  | `kancha`                  |
 | Password | `kancha_dev_password`     |
+
+Si necesitas agregarlo a mano (por ejemplo en un pgAdmin nuevo sin el
+volumen inicializado con `servers.json`), usa esos mismos datos. Como
+pgAdmin corre en la misma red de Docker, el host es el **nombre del
+servicio** (`postgres`), no `localhost`.
 
 ### RedisInsight (web)
 
