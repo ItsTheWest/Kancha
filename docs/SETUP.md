@@ -17,12 +17,14 @@ puertos "de siempre" (3000/3001/5432/6379) que suelen usar otros proyectos
 en la misma máquina. Los puertos **dentro** de la red de Docker (entre
 contenedores) no cambian; solo cambia el lado expuesto al host.
 
-| Servicio   | Puerto host (default) | Variable en `.env` | Puerto interno |
-| ---------- | ---------------------- | ------------------- | -------------- |
-| Frontend   | 53000                   | `FRONTEND_PORT`     | 3000           |
-| Backend    | 53001                   | `BACKEND_PORT`      | 3001           |
-| PostgreSQL | 55432                   | `POSTGRES_PORT`     | 5432           |
-| Redis      | 56379                   | `REDIS_PORT`        | 6379           |
+| Servicio     | Puerto host (default) | Variable en `.env`   | Puerto interno |
+| ------------ | ----------------------- | --------------------- | -------------- |
+| Frontend     | 53000                   | `FRONTEND_PORT`       | 3000           |
+| Backend      | 53001                   | `BACKEND_PORT`        | 3001           |
+| PostgreSQL   | 55432                   | `POSTGRES_PORT`       | 5432           |
+| Redis        | 56379                   | `REDIS_PORT`          | 6379           |
+| pgAdmin      | 55050                   | `PGADMIN_PORT`        | 80             |
+| RedisInsight | 55540                   | `REDISINSIGHT_PORT`   | 5540           |
 
 **Si necesitas usar otro proyecto que ya ocupa alguno de estos puertos:**
 cambia el valor correspondiente en `.env` (cualquier puerto libre funciona) y
@@ -79,18 +81,52 @@ Desde el host con un cliente externo (ej. RedisInsight, Another Redis Desktop Ma
 redis://localhost:56379
 ```
 
+### pgAdmin (web)
+
+| Campo    | Valor                        |
+| -------- | ------------------------------ |
+| URL      | http://localhost:55050         |
+| Email    | `admin@kancha.local`           |
+| Password | `kancha_dev_password`          |
+
+Al entrar, registra un nuevo servidor para conectarte a Postgres. Como
+pgAdmin corre en la misma red de Docker, usa el **nombre del servicio**, no
+`localhost`:
+
+| Campo    | Valor                  |
+| -------- | ------------------------ |
+| Host     | `postgres`                |
+| Puerto   | `5432`                    |
+| Usuario  | `kancha`                  |
+| Password | `kancha_dev_password`     |
+
+### RedisInsight (web)
+
+| Campo | Valor                   |
+| ----- | ------------------------- |
+| URL   | http://localhost:55540     |
+
+Al entrar, agrega una base de datos Redis. Igual que con pgAdmin, usa el
+nombre del servicio dentro de la red de Docker:
+
+| Campo  | Valor    |
+| ------ | --------- |
+| Host   | `redis`    |
+| Puerto | `6379`     |
+
 ## 4. Enlaces
 
-| Qué                  | URL                                      |
-| --------------------- | ----------------------------------------- |
-| Frontend              | http://localhost:53000                    |
-| Backend (health check)| http://localhost:53001/health             |
-| Postgres (cliente GUI)| `localhost:55432` (ver credenciales arriba)|
-| Redis (cliente GUI)   | `localhost:56379`                         |
+| Qué                     | URL                                         |
+| ------------------------ | --------------------------------------------- |
+| Frontend                 | http://localhost:53000                        |
+| Backend (health check)   | http://localhost:53001/health                 |
+| pgAdmin (Postgres web)   | http://localhost:55050                        |
+| RedisInsight (Redis web) | http://localhost:55540                        |
+| Postgres (cliente GUI)   | `localhost:55432` (ver credenciales arriba)    |
+| Redis (cliente GUI)      | `localhost:56379`                             |
 
-No hay administración web incluida todavía; usa cualquier cliente de
-escritorio apuntando a los puertos de arriba, o los comandos `psql` /
-`redis-cli` vía `docker compose exec`.
+También puedes seguir usando los comandos `psql` / `redis-cli` vía
+`docker compose exec` (sección 3) si prefieres la terminal.
 
 ## 5. Reiniciar la base desde cero
 
