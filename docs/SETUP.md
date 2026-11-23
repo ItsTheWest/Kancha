@@ -86,7 +86,7 @@ redis://localhost:56379
 | Campo    | Valor                        |
 | -------- | ------------------------------ |
 | URL      | http://localhost:55050         |
-| Email    | `admin@kancha.local`           |
+| Email    | `admin@kancha.dev`             |
 | Password | `kancha_dev_password`          |
 
 Al entrar, registra un nuevo servidor para conectarte a Postgres. Como
