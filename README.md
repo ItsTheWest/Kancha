@@ -1,6 +1,6 @@
 # Kancha
 
-Plataforma de gestión para clubes deportivos. Este repositorio contiene la **Fase 0 · Cimientos**: entorno Docker, base de datos con sus migraciones y la estructura de backend y frontend. El login llega en la siguiente etapa.
+Plataforma de gestión para clubes deportivos. Este repositorio contiene la **Fase 0 · Cimientos**: entorno Docker, base de datos con sus migraciones y la estructura de backend y frontend. Incluye además la autenticación por correo y Google (ver `docs/SETUP.md`).
 
 ## Stack
 

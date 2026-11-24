@@ -64,6 +64,8 @@ services:
     restart: unless-stopped
     environment:
       BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://backend:3001}
+      SECURE_COOKIES: ${SECURE_COOKIES:-false}
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:53000}
     ports:
       - "${FRONTEND_PORT:-53000}:3000"
     depends_on:
