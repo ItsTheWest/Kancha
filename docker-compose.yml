@@ -38,6 +38,13 @@ services:
       PORT: 3001
       DATABASE_URL: ${DATABASE_URL:-postgres://kancha:kancha_dev_password@postgres:5432/kancha}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?define AUTH_JWT_SECRET en .env (cp .env.example .env)}
+      ACCESS_TOKEN_TTL: ${ACCESS_TOKEN_TTL:-10800}
+      REFRESH_TOKEN_TTL: ${REFRESH_TOKEN_TTL:-2592000}
+      REFRESH_FAMILY_TTL: ${REFRESH_FAMILY_TTL:-7776000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:53000/api/auth/google/callback}
     ports:
       - "${BACKEND_PORT:-53001}:3001"
     depends_on:
