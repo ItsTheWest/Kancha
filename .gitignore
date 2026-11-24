@@ -5,10 +5,12 @@ dist/
 *.tsbuildinfo
 next-env.d.ts
 
-# entorno
+# entorno y credenciales
 .env
 .env.*
 !.env.example
+docs/SETUP.md
+SETUP.md
 
 # sistema / editor
 .DS_Store
