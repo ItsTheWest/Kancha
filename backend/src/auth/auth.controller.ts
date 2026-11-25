@@ -17,6 +17,12 @@ import { UsuarioActual } from './decoradores/usuario-actual.decorador';
 import { CompletarPerfilDto } from './dto/completar-perfil.dto';
 import { GoogleCallbackDto, GoogleInicioDto } from './dto/google.dto';
 import { InicioSesionDto } from './dto/inicio-sesion.dto';
+import {
+  ConfirmarVerificacionDto,
+  RestablecerPasswordDto,
+  SolicitarRecuperacionDto,
+  SolicitarVerificacionDto,
+} from './dto/recuperacion.dto';
 import { RefrescoDto } from './dto/refresco.dto';
 import { RegistroDto } from './dto/registro.dto';
 import { GuardiaLimite } from './guardias/limite.guard';
@@ -83,6 +89,46 @@ export class AuthController {
     @Req() req: Request,
   ) {
     return this.auth.completarPerfil(usuario.id, dto, meta(req));
+  }
+
+  @Publico()
+  @LimitePorIp('verificacion', 5, 900)
+  @HttpCode(200)
+  @Post('verificar-correo/solicitar')
+  async solicitarVerificacion(@Body() dto: SolicitarVerificacionDto) {
+    await this.auth.solicitarVerificacionCorreo(dto.correo);
+    return { ok: true };
+  }
+
+  @Publico()
+  @LimitePorIp('verificacion', 10, 900)
+  @HttpCode(200)
+  @Post('verificar-correo/confirmar')
+  async confirmarVerificacion(@Body() dto: ConfirmarVerificacionDto) {
+    await this.auth.confirmarVerificacionCorreo(dto.correo, dto.codigo);
+    return { ok: true };
+  }
+
+  @Publico()
+  @LimitePorIp('recuperacion', 5, 900)
+  @HttpCode(200)
+  @Post('recuperar-password/solicitar')
+  async solicitarRecuperacion(@Body() dto: SolicitarRecuperacionDto) {
+    await this.auth.solicitarRecuperacionPassword(dto.correo);
+    return { ok: true };
+  }
+
+  @Publico()
+  @LimitePorIp('recuperacion', 10, 900)
+  @HttpCode(200)
+  @Post('recuperar-password/confirmar')
+  async confirmarRecuperacion(@Body() dto: RestablecerPasswordDto) {
+    await this.auth.confirmarRecuperacionPassword(
+      dto.correo,
+      dto.codigo,
+      dto.nuevaContrasena,
+    );
+    return { ok: true };
   }
 
   @Publico()
