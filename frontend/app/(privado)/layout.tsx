@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { requerirSesion } from '../../lib/sesion';
 import { cerrarSesion } from '../acciones/auth';
+import { NavegacionInferior } from '../componentes/navegacion-inferior';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +22,7 @@ export default async function LayoutPrivado({ children }: { children: ReactNode 
         </form>
       </header>
       {children}
+      <NavegacionInferior />
     </>
   );
 }
