@@ -4,9 +4,9 @@
   "private": true,
   "description": "Aplicación web de Kancha",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 53000",
     "build": "next build",
-    "start": "next start"
+    "start": "next start -p 53000"
   },
   "dependencies": {
     "next": "^16.4.6",

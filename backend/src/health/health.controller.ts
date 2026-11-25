@@ -1,11 +1,14 @@
 import { Controller, Get, Inject, ServiceUnavailableException } from '@nestjs/common';
 import Redis from 'ioredis';
 import { Pool } from 'pg';
+import { Publico } from '../auth/decoradores/publico.decorador';
 import { PG_POOL } from '../database/database.module';
 import { REDIS } from '../redis/redis.module';
 
 type Estado = 'up' | 'down';
 
+// Público: lo consulta el healthcheck de Docker, que no tiene sesión.
+@Publico()
 @Controller('health')
 export class HealthController {
   constructor(

@@ -38,6 +38,15 @@ services:
       PORT: 3001
       DATABASE_URL: ${DATABASE_URL:-postgres://kancha:kancha_dev_password@postgres:5432/kancha}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?define AUTH_JWT_SECRET en .env (cp .env.example .env)}
+      ACCESS_TOKEN_TTL: ${ACCESS_TOKEN_TTL:-10800}
+      REFRESH_TOKEN_TTL: ${REFRESH_TOKEN_TTL:-2592000}
+      REFRESH_FAMILY_TTL: ${REFRESH_FAMILY_TTL:-7776000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:53000/api/auth/google/callback}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Kancha <onboarding@resend.dev>}
     ports:
       - "${BACKEND_PORT:-53001}:3001"
     depends_on:
@@ -53,10 +62,13 @@ services:
       start_period: 15s
 
   frontend:
+    profiles: ["deploy"]
     build: ./frontend
     restart: unless-stopped
     environment:
       BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://backend:3001}
+      SECURE_COOKIES: ${SECURE_COOKIES:-false}
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:53000}
     ports:
       - "${FRONTEND_PORT:-53000}:3000"
     depends_on:

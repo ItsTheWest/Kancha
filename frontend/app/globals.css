@@ -77,3 +77,260 @@ h1 {
 .estado[data-estado='down'] {
   color: var(--error);
 }
+
+/* Formularios y autenticación */
+body:has(.barra) {
+  place-items: start center;
+  padding-top: 5rem;
+}
+
+.barra {
+  position: fixed;
+  inset: 0 0 auto 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+  font-size: 0.9rem;
+  z-index: 50;
+}
+
+.suave {
+  color: var(--texto-suave);
+}
+
+.formulario {
+  display: grid;
+  gap: 1rem;
+}
+
+.formulario label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+}
+
+.formulario small {
+  font-size: 0.75rem;
+}
+
+.par {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.grupo-documento,
+.grupo-telefono {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.5rem;
+}
+
+.error-campo {
+  color: var(--error);
+  font-size: 0.78rem;
+  font-weight: 500;
+  display: block;
+  margin-top: 0.15rem;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--borde);
+  border-radius: 0.5rem;
+  background: var(--fondo);
+  color: var(--texto);
+  font: inherit;
+  transition: border-color 0.15s ease;
+}
+
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--ok);
+  outline-offset: 1px;
+}
+
+input.con-error,
+select.con-error {
+  border-color: var(--error);
+}
+
+input.con-error:focus-visible,
+select.con-error:focus-visible {
+  outline-color: var(--error);
+}
+
+/* Campo con botón para mostrar / ocultar contraseña */
+.campo-password-contenedor {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.campo-password-contenedor input {
+  padding-right: 2.5rem;
+}
+
+.boton-ojo {
+  position: absolute;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--texto-suave);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: color 0.15s ease;
+}
+
+.boton-ojo:hover {
+  color: var(--texto);
+}
+
+.boton {
+  display: inline-block;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--ok);
+  border-radius: 0.5rem;
+  background: var(--ok);
+  color: #04130c;
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.boton:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.boton-secundario {
+  background: transparent;
+  color: var(--texto);
+  border-color: var(--borde);
+}
+
+.boton-chico {
+  width: auto;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.aviso {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--error);
+  border-radius: 0.5rem;
+  color: var(--error);
+  font-size: 0.85rem;
+}
+
+.formulario .aviso {
+  margin: 0;
+}
+
+.separador {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  color: var(--texto-suave);
+  font-size: 0.8rem;
+}
+
+.separador::before,
+.separador::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--borde);
+}
+
+.pie {
+  margin-top: 1rem;
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+}
+
+a {
+  color: var(--ok);
+}
+
+.boton:is(a) {
+  color: var(--texto);
+}
+
+/* Barra de Navegación Inferior Móvil (Bottom Navigation) */
+.barra-inferior {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3.75rem;
+  background: var(--superficie);
+  border-top: 1px solid var(--borde);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 0.5rem;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: 100;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.boton-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.2rem;
+  color: var(--texto-suave);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  min-height: 48px;
+}
+
+.boton-nav:hover,
+.boton-nav:focus-visible {
+  color: var(--texto);
+}
+
+.boton-nav.activo {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+/* Padding para evitar que la barra inferior móvil cubra el contenido */
+body:has(.barra-inferior) {
+  padding-bottom: 5.5rem;
+}
+
+@media (min-width: 768px) {
+  .barra-inferior {
+    display: none;
+  }
+  body:has(.barra-inferior) {
+    padding-bottom: 1.5rem;
+  }
+}
