@@ -39,6 +39,7 @@ CREATE TABLE usuarios (
   correo                citext      NOT NULL UNIQUE,
   telefono              text,
   cedula                text        UNIQUE,
+  rol                   text,
   nombres               text        NOT NULL,
   apellidos             text        NOT NULL,
   correo_verificado_en  timestamptz,
@@ -47,8 +48,10 @@ CREATE TABLE usuarios (
   actualizado_en        timestamptz NOT NULL DEFAULT now(),
 
   CONSTRAINT usuarios_estado_valido CHECK (estado IN ('activo', 'suspendido')),
+  CONSTRAINT usuarios_rol_valido CHECK (rol IS NULL OR rol IN ('jugador', 'propietario')),
   CONSTRAINT usuarios_correo_formato CHECK (correo ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
-  CONSTRAINT usuarios_telefono_formato CHECK (telefono IS NULL OR telefono ~ '^\+[0-9]{8,15}$'),
+  CONSTRAINT usuarios_cedula_formato CHECK (cedula IS NULL OR cedula ~ '^[VEJGC][0-9]{6,10}$'),
+  CONSTRAINT usuarios_telefono_formato CHECK (telefono IS NULL OR telefono ~ '^\+?[0-9]{10,15}$'),
   CONSTRAINT usuarios_nombres_no_vacio CHECK (btrim(nombres) <> '' AND btrim(apellidos) <> '')
 );
 
@@ -58,4 +61,6 @@ CREATE TRIGGER usuarios_actualizado_en
 
 COMMENT ON TABLE usuarios IS 'Identidad global de la persona. Las fichas por club se vinculan en miembros_club (Fase 1).';
 COMMENT ON COLUMN usuarios.codigo_publico IS 'Código corto no secuencial para el QR del carnet.';
-COMMENT ON COLUMN usuarios.telefono IS 'Formato internacional, p. ej. +584121234567.';
+COMMENT ON COLUMN usuarios.cedula IS 'Documento de identidad nacional o RIF (ej. V12345678, J123456789).';
+COMMENT ON COLUMN usuarios.rol IS 'Rol global en el sistema: jugador o propietario.';
+COMMENT ON COLUMN usuarios.telefono IS 'Formato nacional o internacional, ej. 04121234567 o +584121234567.';

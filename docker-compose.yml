@@ -60,6 +60,7 @@ services:
       start_period: 15s
 
   frontend:
+    profiles: ["deploy"]
     build: ./frontend
     restart: unless-stopped
     environment:

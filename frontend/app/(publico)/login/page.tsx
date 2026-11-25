@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 const ERRORES: Record<string, string> = {
   google: 'No pudimos iniciar sesión con Google. Inténtalo de nuevo.',
   google_vinculado: 'Ese correo ya está vinculado a otra cuenta de Google.',
+  correo_en_uso: 'Ya existe una cuenta con este correo. Inicia sesión con tus credenciales.',
 };
 
 export default async function Login({

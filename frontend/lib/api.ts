@@ -7,6 +7,9 @@ export interface Perfil {
   correo: string;
   nombres: string;
   apellidos: string;
+  rol: 'jugador' | 'propietario' | null;
+  cedula: string | null;
+  telefono: string | null;
   correoVerificadoEn: string | null;
   estado: 'activo' | 'suspendido';
 }
@@ -50,16 +53,20 @@ export async function llamarApi<T>(ruta: string, opciones: Opciones = {}): Promi
     try {
       cuerpo = await respuesta.json();
     } catch {
-      // 204 o cuerpo vacío.
+      // 204 No Content u otras respuestas sin JSON válido en el cuerpo.
     }
-    const mensaje = (cuerpo as { message?: unknown } | null)?.message;
+    const codigo =
+      typeof cuerpo === 'object' && cuerpo !== null && 'message' in cuerpo
+        ? String((cuerpo as { message: unknown }).message)
+        : null;
     return {
       ok: respuesta.ok,
       status: respuesta.status,
-      datos: respuesta.ok ? (cuerpo as T) : null,
-      codigo: typeof mensaje === 'string' ? mensaje : null,
+      datos: (respuesta.ok ? cuerpo : null) as T | null,
+      codigo,
     };
-  } catch {
+  } catch (error) {
+    console.log(`[bff] error llamando a ${ruta}: ${(error as Error).message}`);
     return { ok: false, status: 0, datos: null, codigo: 'sin_conexion' };
   }
 }

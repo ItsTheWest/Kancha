@@ -16,6 +16,7 @@ export interface PayloadAcceso {
   sid: string;
   jti: string;
   typ: 'acceso';
+  completo: boolean;
   iat: number;
   exp: number;
 }
@@ -33,6 +34,9 @@ export interface PerfilUsuario {
   correo: string;
   nombres: string;
   apellidos: string;
+  rol: 'jugador' | 'propietario' | null;
+  cedula: string | null;
+  telefono: string | null;
   correoVerificadoEn: Date | null;
   estado: 'activo' | 'suspendido';
 }

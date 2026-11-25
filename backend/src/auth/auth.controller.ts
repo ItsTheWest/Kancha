@@ -14,6 +14,7 @@ import { AuthService } from './auth.service';
 import { LimitePorIp } from './decoradores/limite.decorador';
 import { Publico } from './decoradores/publico.decorador';
 import { UsuarioActual } from './decoradores/usuario-actual.decorador';
+import { CompletarPerfilDto } from './dto/completar-perfil.dto';
 import { GoogleCallbackDto, GoogleInicioDto } from './dto/google.dto';
 import { InicioSesionDto } from './dto/inicio-sesion.dto';
 import { RefrescoDto } from './dto/refresco.dto';
@@ -72,6 +73,16 @@ export class AuthController {
   @Get('perfil')
   perfil(@UsuarioActual() usuario: UsuarioAutenticado) {
     return this.auth.perfil(usuario.id);
+  }
+
+  @Post('perfil/completar')
+  @HttpCode(200)
+  completarPerfil(
+    @UsuarioActual() usuario: UsuarioAutenticado,
+    @Body() dto: CompletarPerfilDto,
+    @Req() req: Request,
+  ) {
+    return this.auth.completarPerfil(usuario.id, dto, meta(req));
   }
 
   @Publico()

@@ -24,6 +24,7 @@ export const usuarios = pgTable('usuarios', {
   correo: citext('correo').notNull().unique(),
   telefono: text('telefono'),
   cedula: text('cedula').unique(),
+  rol: text('rol', { enum: ['jugador', 'propietario'] }),
   nombres: text('nombres').notNull(),
   apellidos: text('apellidos').notNull(),
   correoVerificadoEn: timestamp('correo_verificado_en', { withTimezone: true }),

@@ -4,6 +4,7 @@ dist/
 .next/
 *.tsbuildinfo
 next-env.d.ts
+AGENTS.md
 
 # entorno y credenciales
 .env

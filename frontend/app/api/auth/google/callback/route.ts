@@ -18,8 +18,8 @@ export async function GET(peticion: NextRequest) {
   const estado = parametros.get('state');
   const guardado = peticion.cookies.get(COOKIE_OAUTH)?.value;
 
-  const fallar = (motivo: string) => {
-    const respuesta = NextResponse.redirect(urlPublica(`/login?error=${motivo}`));
+  const fallar = (motivo: string, rutaBase = '/login') => {
+    const respuesta = NextResponse.redirect(urlPublica(`${rutaBase}?error=${motivo}`));
     respuesta.cookies.delete({ name: COOKIE_OAUTH, path: '/api/auth' });
     return respuesta;
   };
@@ -35,7 +35,11 @@ export async function GET(peticion: NextRequest) {
     ip: ipDe(peticion.headers),
     agente: peticion.headers.get('user-agent'),
   });
+
   if (!respuesta.ok || !respuesta.datos) {
+    if (respuesta.codigo === 'correo_en_uso') {
+      return fallar('correo_en_uso', '/registro');
+    }
     return fallar(respuesta.codigo === 'google_ya_vinculado' ? 'google_vinculado' : 'google');
   }
 

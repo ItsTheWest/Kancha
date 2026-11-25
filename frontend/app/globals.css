@@ -123,7 +123,23 @@ body:has(.barra) {
   gap: 0.75rem;
 }
 
-input {
+.grupo-documento,
+.grupo-telefono {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.5rem;
+}
+
+.error-campo {
+  color: var(--error);
+  font-size: 0.78rem;
+  font-weight: 500;
+  display: block;
+  margin-top: 0.15rem;
+}
+
+input,
+select {
   width: 100%;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--borde);
@@ -131,11 +147,23 @@ input {
   background: var(--fondo);
   color: var(--texto);
   font: inherit;
+  transition: border-color 0.15s ease;
 }
 
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   outline: 2px solid var(--ok);
   outline-offset: 1px;
+}
+
+input.con-error,
+select.con-error {
+  border-color: var(--error);
+}
+
+input.con-error:focus-visible,
+select.con-error:focus-visible {
+  outline-color: var(--error);
 }
 
 .boton {

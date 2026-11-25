@@ -2,6 +2,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { and, eq, isNull } from 'drizzle-orm';
@@ -11,6 +12,7 @@ import type { Database } from '../database/database.module';
 import { credencialesAcceso, sesiones, usuarios } from '../database/schema';
 import { REDIS } from '../redis/redis.module';
 import { ContrasenasService } from './contrasenas.service';
+import type { CompletarPerfilDto } from './dto/completar-perfil.dto';
 import type { InicioSesionDto } from './dto/inicio-sesion.dto';
 import type { RegistroDto } from './dto/registro.dto';
 import { GoogleService } from './google.service';
@@ -45,13 +47,22 @@ export class AuthService {
 
   async registrar(dto: RegistroDto, meta: MetaPeticion): Promise<RespuestaSesion> {
     const correo = dto.correo.trim().toLowerCase();
+    const cedula = dto.cedula.trim().toUpperCase();
+    const telefono = dto.telefono ? dto.telefono.trim() : null;
     const passwordHash = await this.contrasenas.hashear(dto.contrasena);
     let usuario: FilaUsuario;
     try {
       usuario = await this.db.transaction(async (tx) => {
         const [creado] = await tx
           .insert(usuarios)
-          .values({ correo, nombres: dto.nombres, apellidos: dto.apellidos })
+          .values({
+            correo,
+            nombres: dto.nombres,
+            apellidos: dto.apellidos,
+            rol: dto.rol,
+            cedula,
+            telefono,
+          })
           .returning();
         await tx
           .insert(credencialesAcceso)
@@ -59,9 +70,13 @@ export class AuthService {
         return creado;
       });
     } catch (error) {
-      // Superficie aceptada: sin envío de correo no se puede tener a la vez registro
-      // usable y cero enumeración. Se cierra con la verificación por correo.
-      if (esViolacionUnica(error)) throw new ConflictException('correo_en_uso');
+      if (esViolacionUnica(error)) {
+        const errStr = JSON.stringify(error) + (error instanceof Error ? error.message : '');
+        if (errStr.includes('cedula') || (error as { constraint?: string })?.constraint?.includes('cedula')) {
+          throw new ConflictException('cedula_en_uso');
+        }
+        throw new ConflictException('correo_en_uso');
+      }
       throw error;
     }
     return this.abrirSesion(usuario, meta);
@@ -148,20 +163,24 @@ export class AuthService {
       }
       if (resultado.tipo === 'invalida') throw new UnauthorizedException('sesion_invalida');
 
-      const acceso = this.tokens.firmarAcceso(resultado.usuarioId, resultado.familiaId);
-      const emitidos: TokensEmitidos = {
-        accessToken: acceso.token,
+      const [usuario] = await this.db
+        .select()
+        .from(usuarios)
+        .where(eq(usuarios.id, resultado.usuarioId));
+      if (!usuario || usuario.estado !== 'activo') {
+        throw new UnauthorizedException('sesion_invalida');
+      }
+
+      const completo = Boolean(usuario.rol && usuario.cedula);
+      const tokens = this.tokens.firmarAcceso(resultado.usuarioId, resultado.familiaId, completo);
+      const salida: TokensEmitidos = {
+        accessToken: tokens.token,
         refreshToken: resultado.refreshToken,
-        expiraEn: acceso.expiraEn,
+        expiraEn: tokens.expiraEn,
       };
-      await this.redis.set(
-        CLAVE_RESULTADO(hash),
-        JSON.stringify(emitidos),
-        'EX',
-        VENTANA_IDEMPOTENCIA_SEG,
-      );
+      await this.redis.set(CLAVE_RESULTADO(hash), JSON.stringify(salida), 'EX', VENTANA_IDEMPOTENCIA_SEG);
       this.limpiezaOportunista();
-      return emitidos;
+      return salida;
     } finally {
       await this.redis.del(CLAVE_CERROJO(hash));
     }
@@ -169,33 +188,59 @@ export class AuthService {
 
   async cerrarSesion(refreshToken: string): Promise<void> {
     const familiaId = await this.sesiones.cerrar(refreshToken);
-    // Sin esto "cerrar sesión" solo borraría la cookie y el access token seguiría vivo.
     if (familiaId) await this.tokens.revocarFamilia(familiaId);
   }
 
   async cerrarTodas(usuarioId: string): Promise<void> {
-    await this.sesiones.cerrarTodas(usuarioId);
     await this.tokens.revocarUsuario(usuarioId);
+    await this.sesiones.cerrarTodas(usuarioId);
   }
 
   async perfil(usuarioId: string): Promise<PerfilUsuario> {
     const [usuario] = await this.db.select().from(usuarios).where(eq(usuarios.id, usuarioId));
-    if (!usuario || usuario.estado !== 'activo') throw new UnauthorizedException('sesion_invalida');
+    if (!usuario) throw new UnauthorizedException('usuario_no_encontrado');
     return this.aPerfil(usuario);
   }
 
-  async iniciarGoogle(siguiente: string | undefined) {
-    return this.google.inicio(siguiente);
+  async completarPerfil(usuarioId: string, dto: CompletarPerfilDto, meta: MetaPeticion): Promise<RespuestaSesion> {
+    const cedula = dto.cedula.trim().toUpperCase();
+    const telefono = dto.telefono ? dto.telefono.trim() : null;
+    let actualizado: FilaUsuario;
+    try {
+      const [u] = await this.db
+        .update(usuarios)
+        .set({
+          rol: dto.rol,
+          cedula,
+          telefono,
+          actualizadoEn: new Date(),
+        })
+        .where(eq(usuarios.id, usuarioId))
+        .returning();
+
+      if (!u) throw new NotFoundException('usuario_no_encontrado');
+      actualizado = u;
+    } catch (error) {
+      if (esViolacionUnica(error)) {
+        throw new ConflictException('cedula_en_uso');
+      }
+      throw error;
+    }
+    return this.abrirSesion(actualizado, meta);
   }
 
   proveedores() {
     return { google: this.google.disponible() };
   }
 
+  async iniciarGoogle(siguiente: string | undefined) {
+    return this.google.inicio(siguiente);
+  }
+
   async entrarConGoogle(codigo: string, estado: string, meta: MetaPeticion) {
     const identidad = await this.google.canjear(codigo, estado);
 
-    let vinculo: { usuario: FilaUsuario; revocarSesionesPrevias: boolean };
+    let vinculo: { usuario: FilaUsuario; revocarSesionesPrevias: boolean; nuevo: boolean };
     try {
       vinculo = await this.vincularGoogle(identidad);
     } catch (error) {
@@ -207,7 +252,11 @@ export class AuthService {
     if (vinculo.revocarSesionesPrevias) await this.tokens.revocarUsuario(vinculo.usuario.id);
 
     const respuesta = await this.abrirSesion(vinculo.usuario, meta);
-    return { ...respuesta, siguiente: identidad.siguiente };
+    // Si el usuario no tiene rol ni cédula, se le envía a completar perfil.
+    const perfilIncompleto = !vinculo.usuario.rol || !vinculo.usuario.cedula;
+    const destinoFinal = perfilIncompleto ? '/completar-perfil' : identidad.siguiente;
+
+    return { ...respuesta, siguiente: destinoFinal };
   }
 
   // Vinculación por correo. El riesgo real: como el registro no verifica el correo, un
@@ -218,20 +267,34 @@ export class AuthService {
     correo: string;
     nombres: string | null;
     apellidos: string | null;
+    siguiente: string;
   }) {
+    const esOrigenRegistro = identidad.siguiente.includes('origen=registro');
+
     return this.db.transaction(async (tx) => {
       const [porSub] = await tx
         .select({ usuario: usuarios })
         .from(credencialesAcceso)
         .innerJoin(usuarios, eq(usuarios.id, credencialesAcceso.usuarioId))
         .where(and(eq(credencialesAcceso.tipo, 'google'), eq(credencialesAcceso.googleSub, identidad.sub)));
-      if (porSub) return { usuario: porSub.usuario, revocarSesionesPrevias: false };
+      if (porSub) {
+        if (esOrigenRegistro) {
+          // El usuario intentó registrarse pero ya tenía cuenta vinculada
+          throw new ConflictException('correo_en_uso');
+        }
+        return { usuario: porSub.usuario, revocarSesionesPrevias: false, nuevo: false };
+      }
 
       const [existente] = await tx
         .select()
         .from(usuarios)
         .where(eq(usuarios.correo, identidad.correo))
         .for('update');
+
+      if (existente && esOrigenRegistro) {
+        // La cuenta con este correo ya existe previamente en la base de datos
+        throw new ConflictException('correo_en_uso');
+      }
 
       if (!existente) {
         const parteLocal = identidad.correo.split('@')[0] || 'Usuario';
@@ -247,7 +310,7 @@ export class AuthService {
         await tx
           .insert(credencialesAcceso)
           .values({ usuarioId: creado.id, tipo: 'google', googleSub: identidad.sub });
-        return { usuario: creado, revocarSesionesPrevias: false };
+        return { usuario: creado, revocarSesionesPrevias: false, nuevo: true };
       }
 
       // 4a. El sub es el único identificador estable de Google; el correo se recicla.
@@ -268,29 +331,28 @@ export class AuthService {
         await tx
           .update(sesiones)
           .set({ revocadaEn: new Date(), motivoRevocacion: 'password_cambiada' })
-          .where(and(eq(sesiones.usuarioId, existente.id), isNull(sesiones.revocadaEn)));
-        revocarSesionesPrevias = true;
+          .where(eq(sesiones.usuarioId, existente.id));
+        revocarSesionesPrevias = borradas.length > 0;
+        await tx
+          .update(usuarios)
+          .set({ correoVerificadoEn: new Date() })
+          .where(eq(usuarios.id, existente.id));
         if (borradas.length > 0) {
           console.log(`[auth] usuario=${existente.id} contraseña sin verificar descartada al vincular Google`);
         }
       }
 
-      // 4c y 4d. El CHECK de credenciales exige una fila nueva, nunca un UPDATE cruzado.
-      const [actualizado] = await tx
-        .update(usuarios)
-        .set({ correoVerificadoEn: existente.correoVerificadoEn ?? new Date() })
-        .where(eq(usuarios.id, existente.id))
-        .returning();
       await tx
         .insert(credencialesAcceso)
         .values({ usuarioId: existente.id, tipo: 'google', googleSub: identidad.sub });
-      return { usuario: actualizado, revocarSesionesPrevias };
+      return { usuario: existente, revocarSesionesPrevias, nuevo: false };
     });
   }
 
   private async abrirSesion(usuario: FilaUsuario, meta: MetaPeticion): Promise<RespuestaSesion> {
     const { refreshToken, familiaId } = await this.sesiones.iniciar(usuario.id, meta);
-    const acceso = this.tokens.firmarAcceso(usuario.id, familiaId);
+    const completo = Boolean(usuario.rol && usuario.cedula);
+    const acceso = this.tokens.firmarAcceso(usuario.id, familiaId, completo);
     return {
       usuario: this.aPerfil(usuario),
       accessToken: acceso.token,
@@ -306,6 +368,9 @@ export class AuthService {
       correo: usuario.correo,
       nombres: usuario.nombres,
       apellidos: usuario.apellidos,
+      rol: (usuario.rol as 'jugador' | 'propietario') ?? null,
+      cedula: usuario.cedula ?? null,
+      telefono: usuario.telefono ?? null,
       correoVerificadoEn: usuario.correoVerificadoEn,
       estado: usuario.estado,
     };
