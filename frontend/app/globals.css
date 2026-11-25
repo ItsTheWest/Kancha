@@ -166,6 +166,36 @@ select.con-error:focus-visible {
   outline-color: var(--error);
 }
 
+/* Campo con botón para mostrar / ocultar contraseña */
+.campo-password-contenedor {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.campo-password-contenedor input {
+  padding-right: 2.5rem;
+}
+
+.boton-ojo {
+  position: absolute;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--texto-suave);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: color 0.15s ease;
+}
+
+.boton-ojo:hover {
+  color: var(--texto);
+}
+
 .boton {
   display: inline-block;
   width: 100%;

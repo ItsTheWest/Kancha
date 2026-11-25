@@ -146,7 +146,58 @@ export class TokensVerificacionService {
   }
 
   /**
-   * Restablece la contraseña validando el código de recuperación.
+   * Valida un código de recuperación sin consumirlo todavía (Paso 1).
+   */
+  async validarCodigoRecuperacion(correo: string, codigo: string): Promise<boolean> {
+    const correoNorm = correo.trim().toLowerCase();
+    const [usuario] = await this.db
+      .select()
+      .from(usuarios)
+      .where(eq(usuarios.correo, correoNorm));
+
+    if (!usuario) {
+      throw new BadRequestException('codigo_invalido');
+    }
+
+    const tokenHash = hashearToken(codigo);
+    const ahora = new Date();
+
+    const [tokenFila] = await this.db
+      .select()
+      .from(tokensVerificacion)
+      .where(
+        and(
+          eq(tokensVerificacion.usuarioId, usuario.id),
+          eq(tokensVerificacion.proposito, 'restablecer_password'),
+          isNull(tokensVerificacion.usadoEn),
+        ),
+      );
+
+    if (!tokenFila) {
+      throw new BadRequestException('codigo_invalido');
+    }
+
+    if (tokenFila.intentos >= MAX_INTENTOS) {
+      throw new ConflictException('demasiados_intentos');
+    }
+
+    if (tokenFila.expiraEn <= ahora) {
+      throw new BadRequestException('codigo_expirado');
+    }
+
+    if (tokenFila.tokenHash !== tokenHash) {
+      await this.db
+        .update(tokensVerificacion)
+        .set({ intentos: tokenFila.intentos + 1 })
+        .where(eq(tokensVerificacion.id, tokenFila.id));
+      throw new BadRequestException('codigo_invalido');
+    }
+
+    return true;
+  }
+
+  /**
+   * Restablece la contraseña validando y consumiendo el código de recuperación (Paso 2).
    */
   async restablecerPassword(
     correo: string,

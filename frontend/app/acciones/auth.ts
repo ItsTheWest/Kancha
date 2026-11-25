@@ -165,8 +165,8 @@ export async function registrarse(
 
   if (!contrasena) {
     errores.contrasena = 'Ingresa una contraseña.';
-  } else if (contrasena.length < 10) {
-    errores.contrasena = 'La contraseña debe tener al menos 10 caracteres.';
+  } else if (contrasena.length < 8) {
+    errores.contrasena = 'La contraseña debe tener al menos 8 caracteres.';
   }
 
   if (!confirmacion) {
@@ -305,6 +305,31 @@ export async function solicitarRecuperacionAction(
   redirect(`/recuperar-password/confirmar?correo=${encodeURIComponent(correo)}`);
 }
 
+export async function validarCodigoRecuperacionAction(
+  _anterior: EstadoFormulario,
+  datos: FormData,
+): Promise<EstadoFormulario> {
+  const correo = texto(datos, 'correo').toLowerCase();
+  const codigo = texto(datos, 'codigo').toUpperCase();
+  const campos = { correo, codigo };
+
+  if (!codigo || codigo.length !== 6) {
+    return { errores: { codigo: 'El código debe tener exactamente 6 caracteres.' }, campos };
+  }
+
+  const respuesta = await llamarApi('/auth/recuperar-password/validar', {
+    metodo: 'POST',
+    cuerpo: { correo, codigo },
+    ...(await metaCliente()),
+  });
+
+  if (!respuesta.ok) {
+    return { error: mensajeDeError(respuesta), campos };
+  }
+
+  return { exito: 'codigo_valido', campos };
+}
+
 export async function restablecerPasswordAction(
   _anterior: EstadoFormulario,
   datos: FormData,
@@ -323,8 +348,8 @@ export async function restablecerPasswordAction(
 
   if (!nuevaContrasena) {
     errores.nuevaContrasena = 'Ingresa una nueva contraseña.';
-  } else if (nuevaContrasena.length < 10) {
-    errores.nuevaContrasena = 'La contraseña debe tener al menos 10 caracteres.';
+  } else if (nuevaContrasena.length < 8) {
+    errores.nuevaContrasena = 'La contraseña debe tener al menos 8 caracteres.';
   }
 
   if (!confirmacion) {

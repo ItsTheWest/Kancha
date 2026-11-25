@@ -126,6 +126,10 @@ export class AuthService {
     await this.correo.enviarCodigoRecuperacion(usuario.correo, codigo, usuario.nombres);
   }
 
+  async validarCodigoRecuperacion(correo: string, codigo: string): Promise<void> {
+    await this.tokensVerificacion.validarCodigoRecuperacion(correo, codigo);
+  }
+
   async confirmarRecuperacionPassword(
     correo: string,
     codigo: string,

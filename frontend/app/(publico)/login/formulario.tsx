@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useActionState } from 'react';
 import { iniciarSesion } from '../../acciones/auth';
+import { CampoPassword } from '../../componentes/campo-password';
 
 export function FormularioLogin({ siguiente }: { siguiente: string }) {
   const [estado, accion, pendiente] = useActionState(iniciarSesion, undefined);
@@ -24,24 +25,19 @@ export function FormularioLogin({ siguiente }: { siguiente: string }) {
           <span className="error-campo" role="alert">{estado.errores.correo}</span>
         )}
       </label>
-      <label>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>Contraseña</span>
+
+      <CampoPassword
+        label="Contraseña"
+        name="contrasena"
+        autoComplete="current-password"
+        error={estado?.errores?.contrasena}
+        extraHeader={
           <Link href="/recuperar-password" style={{ fontSize: '0.8rem', textDecoration: 'none' }}>
             ¿Olvidaste tu contraseña?
           </Link>
-        </div>
-        <input
-          type="password"
-          name="contrasena"
-          autoComplete="current-password"
-          required
-          className={estado?.errores?.contrasena ? 'con-error' : undefined}
-        />
-        {estado?.errores?.contrasena && (
-          <span className="error-campo" role="alert">{estado.errores.contrasena}</span>
-        )}
-      </label>
+        }
+      />
+
       {estado?.error && (
         <p className="aviso" role="alert">
           {estado.error}

@@ -21,7 +21,7 @@ export class RegistroDto {
   // Largo mínimo sin reglas de composición (NIST 800-63B). El máximo evita usar
   // argon2 como amplificador de CPU.
   @IsString()
-  @MinLength(10)
+  @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres.' })
   @MaxLength(128)
   contrasena: string;
 

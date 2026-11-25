@@ -22,6 +22,7 @@ import {
   RestablecerPasswordDto,
   SolicitarRecuperacionDto,
   SolicitarVerificacionDto,
+  ValidarCodigoRecuperacionDto,
 } from './dto/recuperacion.dto';
 import { RefrescoDto } from './dto/refresco.dto';
 import { RegistroDto } from './dto/registro.dto';
@@ -115,6 +116,15 @@ export class AuthController {
   @Post('recuperar-password/solicitar')
   async solicitarRecuperacion(@Body() dto: SolicitarRecuperacionDto) {
     await this.auth.solicitarRecuperacionPassword(dto.correo);
+    return { ok: true };
+  }
+
+  @Publico()
+  @LimitePorIp('recuperacion', 10, 900)
+  @HttpCode(200)
+  @Post('recuperar-password/validar')
+  async validarCodigoRecuperacion(@Body() dto: ValidarCodigoRecuperacionDto) {
+    await this.auth.validarCodigoRecuperacion(dto.correo, dto.codigo);
     return { ok: true };
   }
 

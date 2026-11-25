@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { registrarse } from '../../acciones/auth';
+import { CampoPassword } from '../../componentes/campo-password';
 
 export function FormularioRegistro() {
   const [estado, accion, pendiente] = useActionState(registrarse, undefined);
@@ -128,38 +129,22 @@ export function FormularioRegistro() {
         )}
       </label>
 
-      <label>
-        Contraseña
-        <input
-          type="password"
-          name="contrasena"
-          autoComplete="new-password"
-          minLength={10}
-          maxLength={128}
-          required
-          className={estado?.errores?.contrasena ? 'con-error' : undefined}
-        />
-        <small>Al menos 10 caracteres.</small>
-        {estado?.errores?.contrasena && (
-          <span className="error-campo" role="alert">{estado.errores.contrasena}</span>
-        )}
-      </label>
+      <CampoPassword
+        label="Contraseña"
+        name="contrasena"
+        autoComplete="new-password"
+        minLength={8}
+        small="Al menos 8 caracteres."
+        error={estado?.errores?.contrasena}
+      />
 
-      <label>
-        Confirmar contraseña
-        <input
-          type="password"
-          name="confirmacion"
-          autoComplete="new-password"
-          minLength={10}
-          maxLength={128}
-          required
-          className={estado?.errores?.confirmacion ? 'con-error' : undefined}
-        />
-        {estado?.errores?.confirmacion && (
-          <span className="error-campo" role="alert">{estado.errores.confirmacion}</span>
-        )}
-      </label>
+      <CampoPassword
+        label="Confirmar contraseña"
+        name="confirmacion"
+        autoComplete="new-password"
+        minLength={8}
+        error={estado?.errores?.confirmacion}
+      />
 
       {estado?.error && (
         <p className="aviso" role="alert">
