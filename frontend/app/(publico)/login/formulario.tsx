@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useActionState } from 'react';
 import { iniciarSesion } from '../../acciones/auth';
 
@@ -24,7 +25,12 @@ export function FormularioLogin({ siguiente }: { siguiente: string }) {
         )}
       </label>
       <label>
-        Contraseña
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Contraseña</span>
+          <Link href="/recuperar-password" style={{ fontSize: '0.8rem', textDecoration: 'none' }}>
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
         <input
           type="password"
           name="contrasena"

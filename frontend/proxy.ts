@@ -14,9 +14,16 @@ import { caducado, leerPayload } from './lib/jwt';
 // En Next 16 el middleware se llama "proxy"; es la misma funcionalidad.
 // Es una puerta de UX: solo mira `exp`. El límite real de autorización es el guard de Nest.
 
-const AUTENTICACION = ['/login', '/registro'];
+const RUTAS_PUBLICAS = [
+  '/login',
+  '/registro',
+  '/recuperar-password',
+  '/recuperar-password/confirmar',
+];
+
 const esPublica = (ruta: string) =>
-  AUTENTICACION.includes(ruta) || ruta.startsWith('/api/auth/');
+  RUTAS_PUBLICAS.some((r) => ruta === r || ruta.startsWith('/recuperar-password')) ||
+  ruta.startsWith('/api/auth/');
 
 export async function proxy(peticion: NextRequest) {
   const { pathname, search } = peticion.nextUrl;
@@ -25,9 +32,10 @@ export async function proxy(peticion: NextRequest) {
   const vigente = Boolean(acceso && !caducado(acceso));
 
   if (esPublica(pathname)) {
-    // Con sesión vigente, login y registro no tienen sentido. Nunca se redirige a /login
-    // desde una ruta pública: las dos condiciones son excluyentes y no hay bucle.
-    if (vigente && AUTENTICACION.includes(pathname)) return NextResponse.redirect(urlPublica('/'));
+    // Con sesión vigente, login y registro no tienen sentido.
+    if (vigente && (pathname === '/login' || pathname === '/registro')) {
+      return NextResponse.redirect(urlPublica('/'));
+    }
     return NextResponse.next();
   }
 

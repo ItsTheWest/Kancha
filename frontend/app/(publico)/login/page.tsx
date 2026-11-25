@@ -11,12 +11,16 @@ const ERRORES: Record<string, string> = {
   correo_en_uso: 'Ya existe una cuenta con este correo. Inicia sesión con tus credenciales.',
 };
 
+const EXITOS: Record<string, string> = {
+  password_actualizada: 'Tu contraseña ha sido actualizada exitosamente. Inicia sesión con tu nueva clave.',
+};
+
 export default async function Login({
   searchParams,
 }: {
-  searchParams: Promise<{ siguiente?: string; error?: string }>;
+  searchParams: Promise<{ siguiente?: string; error?: string; exito?: string }>;
 }) {
-  const { siguiente, error } = await searchParams;
+  const { siguiente, error, exito } = await searchParams;
   const destino = rutaSegura(siguiente);
 
   return (
@@ -24,6 +28,11 @@ export default async function Login({
       <h1>Kancha</h1>
       <p className="sub">Inicia sesión para continuar</p>
       <section className="tarjeta">
+        {exito && EXITOS[exito] && (
+          <p className="aviso" style={{ borderColor: 'var(--ok)', color: 'var(--ok)' }} role="status">
+            {EXITOS[exito]}
+          </p>
+        )}
         {error && ERRORES[error] && (
           <p className="aviso" role="alert">
             {ERRORES[error]}

@@ -13,6 +13,7 @@ export type EstadoFormulario =
       error?: string;
       errores?: Record<string, string>;
       campos?: Record<string, string>;
+      exito?: string;
     }
   | undefined;
 
@@ -26,6 +27,10 @@ function mensajeDeError(respuesta: RespuestaApi<unknown>): string {
       return 'Ya existe una cuenta con ese correo electrónico.';
     case 'cedula_en_uso':
       return 'Ya existe una cuenta registrada con esa cédula o RIF.';
+    case 'codigo_invalido':
+      return 'El código ingresado es incorrecto o ya fue utilizado.';
+    case 'codigo_expirado':
+      return 'El código ha expirado. Solicita uno nuevo.';
     case 'sin_conexion':
       return 'No pudimos conectar con el servidor. Inténtalo de nuevo.';
     default:
@@ -146,7 +151,7 @@ export async function registrarse(
   let telefono: string | undefined = undefined;
   if (numTel.length > 0) {
     if (numTel.length !== 7) {
-      errores.telefono = 'El teléfono debe tener exactamente 7 dígitos después del prefijo (ej: 1234567).';
+      errores.telefono = 'El teléfono debe tener exactamente 7 dígitos después del prefijo.';
     } else {
       telefono = `${codigoTel}${numTel}`;
     }
@@ -205,7 +210,7 @@ export async function registrarse(
   }
 
   await guardarSesion(respuesta.datos);
-  redirect('/');
+  redirect('/verificar-correo');
 }
 
 export async function completarPerfilAction(
@@ -241,7 +246,7 @@ export async function completarPerfilAction(
   let telefono: string | undefined = undefined;
   if (numTel.length > 0) {
     if (numTel.length !== 7) {
-      errores.telefono = 'El teléfono debe tener exactamente 7 dígitos después del prefijo (ej: 1234567).';
+      errores.telefono = 'El teléfono debe tener exactamente 7 dígitos después del prefijo.';
     } else {
       telefono = `${codigoTel}${numTel}`;
     }
@@ -277,6 +282,113 @@ export async function completarPerfilAction(
 
   await guardarSesion(respuesta.datos);
   redirect('/');
+}
+
+export async function solicitarRecuperacionAction(
+  _anterior: EstadoFormulario,
+  datos: FormData,
+): Promise<EstadoFormulario> {
+  const correo = texto(datos, 'correo').toLowerCase();
+  if (!correo) {
+    return { errores: { correo: 'Ingresa tu correo electrónico.' }, campos: { correo } };
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+    return { errores: { correo: 'El formato del correo electrónico no es válido.' }, campos: { correo } };
+  }
+
+  await llamarApi('/auth/recuperar-password/solicitar', {
+    metodo: 'POST',
+    cuerpo: { correo },
+    ...(await metaCliente()),
+  });
+
+  redirect(`/recuperar-password/confirmar?correo=${encodeURIComponent(correo)}`);
+}
+
+export async function restablecerPasswordAction(
+  _anterior: EstadoFormulario,
+  datos: FormData,
+): Promise<EstadoFormulario> {
+  const correo = texto(datos, 'correo').toLowerCase();
+  const codigo = texto(datos, 'codigo').toUpperCase();
+  const nuevaContrasena = String(datos.get('nuevaContrasena') ?? '');
+  const confirmacion = String(datos.get('confirmacion') ?? '');
+
+  const campos = { correo, codigo };
+  const errores: Record<string, string> = {};
+
+  if (!codigo || codigo.length !== 6) {
+    errores.codigo = 'El código debe tener exactamente 6 caracteres alfanuméricos.';
+  }
+
+  if (!nuevaContrasena) {
+    errores.nuevaContrasena = 'Ingresa una nueva contraseña.';
+  } else if (nuevaContrasena.length < 10) {
+    errores.nuevaContrasena = 'La contraseña debe tener al menos 10 caracteres.';
+  }
+
+  if (!confirmacion) {
+    errores.confirmacion = 'Confirma tu nueva contraseña.';
+  } else if (nuevaContrasena && nuevaContrasena !== confirmacion) {
+    errores.confirmacion = 'Las contraseñas no coinciden.';
+  }
+
+  if (Object.keys(errores).length > 0) {
+    return { errores, campos };
+  }
+
+  const respuesta = await llamarApi('/auth/recuperar-password/confirmar', {
+    metodo: 'POST',
+    cuerpo: { correo, codigo, nuevaContrasena },
+    ...(await metaCliente()),
+  });
+
+  if (!respuesta.ok) {
+    return { error: mensajeDeError(respuesta), campos };
+  }
+
+  redirect('/login?exito=password_actualizada');
+}
+
+export async function solicitarVerificacionAction(
+  _anterior: EstadoFormulario,
+  datos: FormData,
+): Promise<EstadoFormulario> {
+  const correo = texto(datos, 'correo').toLowerCase();
+  if (!correo) return { error: 'No se encontró correo.' };
+
+  await llamarApi('/auth/verificar-correo/solicitar', {
+    metodo: 'POST',
+    cuerpo: { correo },
+    ...(await metaCliente()),
+  });
+
+  return { exito: 'Te hemos enviado un nuevo código de verificación a tu correo.' };
+}
+
+export async function confirmarVerificacionAction(
+  _anterior: EstadoFormulario,
+  datos: FormData,
+): Promise<EstadoFormulario> {
+  const correo = texto(datos, 'correo').toLowerCase();
+  const codigo = texto(datos, 'codigo').toUpperCase();
+  const campos = { correo, codigo };
+
+  if (!codigo || codigo.length !== 6) {
+    return { errores: { codigo: 'Ingresa el código de 6 caracteres.' }, campos };
+  }
+
+  const respuesta = await llamarApi('/auth/verificar-correo/confirmar', {
+    metodo: 'POST',
+    cuerpo: { correo, codigo },
+    ...(await metaCliente()),
+  });
+
+  if (!respuesta.ok) {
+    return { error: mensajeDeError(respuesta), campos };
+  }
+
+  redirect('/?verificado=true');
 }
 
 export async function cerrarSesion() {
