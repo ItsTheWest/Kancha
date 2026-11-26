@@ -5,7 +5,10 @@
   --borde: #243040;
   --texto: #e8edf3;
   --texto-suave: #93a1b3;
-  --ok: #3ecf8e;
+  --color-club-primario: #3ecf8e;
+  --color-club-secundario: #1f7a52;
+  --color-club-acento: #6ef0b0;
+  --ok: var(--color-club-primario, #3ecf8e);
   --error: #ff6b6b;
 }
 
@@ -270,6 +273,10 @@ a {
 }
 
 .boton:is(a) {
+  color: #04130c;
+}
+
+.boton-secundario:is(a) {
   color: var(--texto);
 }
 

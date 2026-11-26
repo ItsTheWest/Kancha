@@ -14,6 +14,23 @@ export interface Perfil {
   estado: 'activo' | 'suspendido';
 }
 
+export interface ClubItem {
+  id: string;
+  nombre: string;
+  slug: string;
+  deporte: string;
+  ciudad: string | null;
+  logoUrl: string | null;
+  colorPrimario: string;
+  colorSecundario: string;
+  colorAcento: string;
+  esPropietario: boolean;
+  estadoMiembro: string;
+  miembroId: string;
+  categoria: string;
+  roles: string[];
+}
+
 export interface RespuestaApi<T> {
   ok: boolean;
   status: number;
@@ -23,7 +40,7 @@ export interface RespuestaApi<T> {
 }
 
 interface Opciones {
-  metodo?: 'GET' | 'POST' | 'DELETE';
+  metodo?: 'GET' | 'POST' | 'DELETE' | 'PATCH';
   token?: string;
   cuerpo?: unknown;
   ip?: string;
