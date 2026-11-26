@@ -1,8 +1,10 @@
 import { sql } from 'drizzle-orm';
 import {
+  boolean,
   customType,
   integer,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   unique,
@@ -97,3 +99,90 @@ export const sesiones = pgTable('sesiones', {
   creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
   actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ============================================================================
+// Fase 1: Clubes, Roles, Categorías y Miembros
+// ============================================================================
+
+export const clubes = pgTable('clubes', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  slug: text('slug').notNull().unique(),
+  nombre: text('nombre').notNull(),
+  deporte: text('deporte').notNull().default('futbol'),
+  ciudad: text('ciudad'),
+  logoUrl: text('logo_url'),
+  colorPrimario: text('color_primario').notNull().default('#3ecf8e'),
+  colorSecundario: text('color_secundario').notNull().default('#1f7a52'),
+  colorAcento: text('color_acento').notNull().default('#6ef0b0'),
+  creadorId: uuid('creador_id')
+    .notNull()
+    .references(() => usuarios.id, { onDelete: 'restrict' }),
+  estado: text('estado', { enum: ['activo', 'suspendido', 'archivado'] }).notNull().default('activo'),
+  creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+  actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const rolesClub = pgTable(
+  'roles_club',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    clubId: uuid('club_id')
+      .notNull()
+      .references(() => clubes.id, { onDelete: 'cascade' }),
+    nombre: text('nombre').notNull(),
+    descripcion: text('descripcion'),
+    esSistema: boolean('es_sistema').notNull().default(false),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+    actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique('roles_club_unico_por_club').on(t.clubId, t.nombre)],
+);
+
+export const categorias = pgTable(
+  'categorias',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    clubId: uuid('club_id')
+      .notNull()
+      .references(() => clubes.id, { onDelete: 'cascade' }),
+    nombre: text('nombre').notNull(),
+    descripcion: text('descripcion'),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+    actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique('categorias_unica_por_club').on(t.clubId, t.nombre)],
+);
+
+export const miembrosClub = pgTable(
+  'miembros_club',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    clubId: uuid('club_id')
+      .notNull()
+      .references(() => clubes.id, { onDelete: 'cascade' }),
+    usuarioId: uuid('usuario_id')
+      .notNull()
+      .references(() => usuarios.id, { onDelete: 'cascade' }),
+    categoriaId: uuid('categoria_id').references(() => categorias.id, { onDelete: 'set null' }),
+    numeroCamiseta: integer('numero_camiseta'),
+    posicion: text('posicion'),
+    estado: text('estado', { enum: ['activo', 'invitado', 'inactivo', 'suspendido'] }).notNull().default('activo'),
+    creadoEn: timestamp('creado_en', { withTimezone: true }).notNull().defaultNow(),
+    actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique('miembros_club_unico_usuario').on(t.clubId, t.usuarioId)],
+);
+
+export const miembroRoles = pgTable(
+  'miembro_roles',
+  {
+    miembroId: uuid('miembro_id')
+      .notNull()
+      .references(() => miembrosClub.id, { onDelete: 'cascade' }),
+    rolId: uuid('rol_id')
+      .notNull()
+      .references(() => rolesClub.id, { onDelete: 'cascade' }),
+    asignadoEn: timestamp('asignado_en', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.miembroId, t.rolId] })],
+);
